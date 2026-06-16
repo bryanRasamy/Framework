@@ -2,7 +2,7 @@
 
 # Définition des variables
 FRAMEWORK_NAME="JavaFrame"
-SRC_DIR="src/main/java"
+SRC_DIR="src/main"
 BUILD_DIR="build"
 CLASSES_DIR="$BUILD_DIR/classes"
 
