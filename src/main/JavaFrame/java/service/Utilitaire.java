@@ -1,27 +1,33 @@
 package main.JavaFrame.java.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
+import java.lang.reflect.Method;
+
+import main.JavaFrame.web.annotations.controller.*;
+import main.JavaFrame.java.modele.*;
 import java.net.URL;
 
 public class Utilitaire {
-    public static List<String> getNameVariable(String namePackage,Class<? extends Annotation> annotation, ElementType typeAnnotation) throws Exception{
-        List<String> liste = new ArrayList<>();
+    public static List<Class> getNameClasse(String namePackage,Class<? extends Annotation> annotation, ElementType typeAnnotation) throws Exception{
+        List<Class> liste = new ArrayList<>();
 
         if (typeAnnotation==ElementType.TYPE) {
-            liste=getNameClasse(namePackage, annotation);
-        } else {
+            liste=getClasse(namePackage, annotation);
+        }else {
             throw new Exception("Le type de l'annotation est introuvable");
         }
 
         return liste;
     }
 
-    public static List<String> getNameClasse(String namePackage,Class<? extends Annotation> annotation) throws Exception{
-        List<String> liste = new ArrayList<>();
+    public static List<Class> getClasse(String namePackage,Class<? extends Annotation> annotation) throws Exception{
+        List<Class> liste = new ArrayList<>();
 
         String chemin = namePackage.replace(".", "/");
 
@@ -47,13 +53,53 @@ public class Utilitaire {
                     Class<?> classe = Class.forName(className);
 
                     if (classe.isAnnotationPresent(annotation)) {
-                        liste.add(className);
+                        liste.add(classe);
                     }
                 }
             }
         }
 
         return liste;
+    }
+
+    public static Map<String,RouteMapping> getListURL(List<Class> classes) throws Exception{
+        Map<String,RouteMapping> listeUrl = new HashMap<>();
+
+        try {
+            for (Class classe : classes) {
+                Method[] listeMethods = classe.getMethods();
+
+                for (Method methode : listeMethods) {
+                    Annotation[] annotations = methode.getAnnotations();
+
+                    for (Annotation annotation : annotations) {
+                        try {
+                            Method methodeUrl = annotation.annotationType().getMethod("url");
+                        
+                            String url = (String) methodeUrl.invoke(annotation);
+                            
+                            if (listeUrl.containsKey(url)) {
+                                throw new Exception("Erreur : L'URL '" + url + "' est déjà associée à une autre méthode !");
+                            }
+                            
+                            RouteMapping route = new RouteMapping();
+                            route.setNameClasse(classe.getSimpleName());
+                            route.setNameMethode(methode.getName());
+
+                            listeUrl.put(url, route);
+                        } catch (NoSuchMethodException e) {
+                            
+                        }
+                        
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+        
+
+        return listeUrl;
     }
 }
 
