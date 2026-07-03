@@ -66,21 +66,32 @@ public class FrontControllerServlet extends HttpServlet {
 
         if (classeMethode!=null) {
             out.println(actionPath);
-            out.println(classeMethode.getNameClasse());
-            out.println(classeMethode.getNameMethode());
+            out.println(classeMethode.getClasse().getSimpleName());
+            out.println(classeMethode.getMethode().getName());
             out.println(urlMethod.getMethod());
+
+            try {
+                Utilitaire.callMethod(classeMethode);
+            } catch (Exception e) {
+                out.println(e.getMessage());
+                return;
+            }
         }else{
             out.println("Url:"+actionPath+" non trouver");
             out.println("Liste des url disponibles dans cette framework");
 
             for (Map.Entry<UrlMethod,RouteMapping> urlRoute : listeUrl.entrySet()) {
-                UrlMethod urlClasse = urlRoute.getKey();
-                RouteMapping route = urlRoute.getValue();
+                try {
+                    UrlMethod urlClasse = urlRoute.getKey();
+                    RouteMapping route = urlRoute.getValue();
 
-                out.println(urlClasse.getUrl());
-                out.println(urlClasse.getMethod());
-                out.println(route.getNameClasse());
-                out.println(route.getNameMethode());
+                    out.println(urlClasse.getUrl());
+                    out.println(urlClasse.getMethod());
+                    out.println(route.getClasse().getSimpleName());
+                    out.println(route.getMethode().getName());
+                } catch (Exception e) {
+                    out.println(e.getMessage());
+                }
             }
         }
     }
