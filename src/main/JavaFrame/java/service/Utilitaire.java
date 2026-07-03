@@ -82,8 +82,8 @@ public class Utilitaire {
                             }
                             
                             RouteMapping route = new RouteMapping();
-                            route.setNameClasse(classe.getSimpleName());
-                            route.setNameMethode(methode.getName());
+                            route.setClasse(classe);
+                            route.setMethode(methode);
 
                             listeUrl.put(urlMethod, route);
                         } catch (NoSuchMethodException e) {
@@ -93,6 +93,18 @@ public class Utilitaire {
                     }
                 }
             }
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    public static void callMethod(RouteMapping route) throws Exception{
+        try {
+            Object instance = route.getClasse().getDeclaredConstructor().newInstance();
+
+            Object valeur = route.getMethode().invoke(instance);
+
+            System.out.println(valeur);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

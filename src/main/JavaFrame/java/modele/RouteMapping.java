@@ -1,27 +1,29 @@
 package main.JavaFrame.java.modele;
 
+import java.lang.reflect.Method;
+
 public class RouteMapping {
-    private String nameClasse;
-    private String nameMethode;
+    private Class classe;
+    private Method methode;
 
     /*Constructeur*/
     public RouteMapping(){}
 
     /*Setters*/
-    public void setNameClasse(String name){
-        this.nameClasse=name;
+    public void setClasse(Class classe){
+        this.classe=classe;
     }
 
-    public void setNameMethode(String name){
-        this.nameMethode=name;
+    public void setMethode(Method method){
+        this.methode=method;
     }
 
     /*Getters*/
-    public String getNameClasse(){
-        return this.nameClasse;
+    public Class getClasse(){
+        return this.classe;
     }
 
-    public String getNameMethode(){
-        return this.nameMethode;
+    public Method getMethode(){
+        return this.methode;
     }
 }
