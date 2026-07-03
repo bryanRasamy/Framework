@@ -2,6 +2,7 @@ package main.JavaFrame.java.controller;
 
 import java.io.*;
 import java.lang.annotation.ElementType;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 public class FrontControllerServlet extends HttpServlet {
-    private Map<String,RouteMapping> listeUrl;
+    private Map<UrlMethod,RouteMapping> listeUrl;
     private Exception exception;
 
     public void init() throws ServletException {
@@ -21,7 +22,8 @@ public class FrontControllerServlet extends HttpServlet {
         try {
             List<Class> listeClasse = Utilitaire.getNameClasse(namePackage, Controller.class, ElementType.TYPE);
 
-            listeUrl = Utilitaire.getListURL(listeClasse);
+            listeUrl=new HashMap<>();
+            Utilitaire.getListURL(listeClasse,listeUrl);
         } catch (Exception e) {
             exception=e;
         }
@@ -53,30 +55,34 @@ public class FrontControllerServlet extends HttpServlet {
 
         if (exception!=null) {
             out.println(exception.getMessage());
+            return;
         }
 
-        RouteMapping classeMethode = listeUrl.get(actionPath);
+        UrlMethod urlMethod = new UrlMethod();
+        urlMethod.setUrl(actionPath);
+        urlMethod.setMethod("get");
+
+        RouteMapping classeMethode = listeUrl.get(urlMethod);
 
         if (classeMethode!=null) {
             out.println(actionPath);
             out.println(classeMethode.getNameClasse());
             out.println(classeMethode.getNameMethode());
+            out.println(urlMethod.getMethod());
         }else{
             out.println("Url:"+actionPath+" non trouver");
             out.println("Liste des url disponibles dans cette framework");
 
-            for (Map.Entry<String,RouteMapping> urlRoute : listeUrl.entrySet()) {
-                String urlClasse = urlRoute.getKey();
+            for (Map.Entry<UrlMethod,RouteMapping> urlRoute : listeUrl.entrySet()) {
+                UrlMethod urlClasse = urlRoute.getKey();
                 RouteMapping route = urlRoute.getValue();
 
-                out.println(urlClasse);
+                out.println(urlClasse.getUrl());
+                out.println(urlClasse.getMethod());
                 out.println(route.getNameClasse());
                 out.println(route.getNameMethode());
             }
         }
-
-        
-
     }
 }
 
