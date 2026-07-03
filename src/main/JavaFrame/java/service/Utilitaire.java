@@ -8,8 +8,6 @@ import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
-
-import main.JavaFrame.web.annotations.controller.*;
 import main.JavaFrame.java.modele.*;
 import java.net.URL;
 
@@ -62,9 +60,7 @@ public class Utilitaire {
         return liste;
     }
 
-    public static Map<String,RouteMapping> getListURL(List<Class> classes) throws Exception{
-        Map<String,RouteMapping> listeUrl = new HashMap<>();
-
+    public static  void getListURL(List<Class> classes, Map<UrlMethod,RouteMapping> listeUrl) throws Exception{
         try {
             for (Class classe : classes) {
                 Method[] listeMethods = classe.getMethods();
@@ -74,19 +70,22 @@ public class Utilitaire {
 
                     for (Annotation annotation : annotations) {
                         try {
-                            Method methodeUrl = annotation.annotationType().getMethod("url");
-                        
-                            String url = (String) methodeUrl.invoke(annotation);
+                            String url = (String) annotation.annotationType().getMethod("url").invoke(annotation);
+                            String method = (String)  annotation.annotationType().getMethod("method").invoke(annotation);
                             
-                            if (listeUrl.containsKey(url)) {
-                                throw new Exception("Erreur : L'URL '" + url + "' est déjà associée à une autre méthode !");
+                            UrlMethod urlMethod = new UrlMethod();
+                            urlMethod.setUrl(url);
+                            urlMethod.setMethod(method);
+
+                            if (listeUrl.containsKey(urlMethod)) {
+                                throw new Exception("Erreur : L'URL '" + url + " avec la mehode "+method+" est déjà associée à une autre méthode !");
                             }
                             
                             RouteMapping route = new RouteMapping();
                             route.setNameClasse(classe.getSimpleName());
                             route.setNameMethode(methode.getName());
 
-                            listeUrl.put(url, route);
+                            listeUrl.put(urlMethod, route);
                         } catch (NoSuchMethodException e) {
                             
                         }
@@ -97,9 +96,6 @@ public class Utilitaire {
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
-        
-
-        return listeUrl;
     }
 }
 
