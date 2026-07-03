@@ -9,6 +9,8 @@ import java.util.Map;
 import main.JavaFrame.java.service.*;
 import main.JavaFrame.java.modele.*;
 import main.JavaFrame.web.annotations.controller.*;
+import main.JavaFrame.java.listener.*;
+
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
@@ -17,17 +19,8 @@ public class FrontControllerServlet extends HttpServlet {
     private Exception exception;
 
     public void init() throws ServletException {
-        String namePackage = this.getInitParameter("package_controller");
-    
-        try {
-            List<Class> listeClasse = Utilitaire.getNameClasse(namePackage, Controller.class, ElementType.TYPE);
-
-            listeUrl=new HashMap<>();
-            Utilitaire.getListURL(listeClasse,listeUrl);
-        } catch (Exception e) {
-            exception=e;
-        }
-        
+        this.listeUrl = (Map<UrlMethod, RouteMapping>) this.getServletContext().getAttribute("listeUrl");
+        this.exception = (Exception) this.getServletContext().getAttribute("exception");
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
