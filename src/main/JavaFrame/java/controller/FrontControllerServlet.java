@@ -17,10 +17,14 @@ import jakarta.servlet.http.*;
 public class FrontControllerServlet extends HttpServlet {
     private Map<UrlMethod,RouteMapping> listeUrl;
     private Exception exception;
+    private String prefix;
+    private String suffix;
 
     public void init() throws ServletException {
         this.listeUrl = (Map<UrlMethod, RouteMapping>) this.getServletContext().getAttribute("listeUrl");
         this.exception = (Exception) this.getServletContext().getAttribute("exception");
+        this.prefix = (String) this.getServletContext().getAttribute("prefix");
+        this.suffix = (String) this.getServletContext().getAttribute("suffix");
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -32,19 +36,28 @@ public class FrontControllerServlet extends HttpServlet {
     }
 
     protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        System.out.println("DispatcherType: " + req.getDispatcherType());
+        System.out.println("PathInfo: " + req.getPathInfo());
+
+        if (req.getDispatcherType() == DispatcherType.FORWARD) {
+            return;
+        }
+
         String url = req.getRequestURL().toString();
 
-        String actionPath = req.getPathInfo().toString();
+        String actionPath = req.getServletPath();
 
-        if (actionPath == null) {
+        if (actionPath == null || actionPath.isEmpty()) {
+            actionPath = req.getPathInfo();
+        }
+
+        if (actionPath == null || actionPath.isEmpty()) {
             actionPath = "/";
         }
 
         res.setContentType("text/plain");
 
         PrintWriter out = res.getWriter();
-        out.println("Vous etes arriver dans cette url");
-        out.println(actionPath);
 
         if (exception!=null) {
             out.println(exception.getMessage());
@@ -58,13 +71,32 @@ public class FrontControllerServlet extends HttpServlet {
         RouteMapping classeMethode = listeUrl.get(urlMethod);
 
         if (classeMethode!=null) {
-            out.println(actionPath);
-            out.println(classeMethode.getClasse().getSimpleName());
-            out.println(classeMethode.getMethode().getName());
-            out.println(urlMethod.getMethod());
-
             try {
-                Utilitaire.callMethod(classeMethode);
+                Object valeur=Utilitaire.callMethod(classeMethode);
+
+                if(valeur instanceof ModelAndView){
+                    ModelAndView modelView = (ModelAndView) valeur;
+
+                    String cheminVue = Utilitaire.createPathView(prefix, modelView.getView(), suffix);
+
+                    for (Map.Entry<String,Object> attribut : modelView.getAttributs().entrySet()) {
+                        String key = attribut.getKey();
+                        Object value = attribut.getValue();
+
+                        req.setAttribute(key,value);
+                    }
+
+                    System.out.println(cheminVue);
+                    System.out.println(actionPath);
+
+                    RequestDispatcher dispat = req.getRequestDispatcher(cheminVue);
+                    System.out.println(dispat);
+                    dispat.forward(req,res);
+
+                    return;
+                }else{
+                    out.println("probleme");
+                }
             } catch (Exception e) {
                 out.println(e.getMessage());
                 return;

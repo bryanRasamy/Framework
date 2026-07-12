@@ -98,16 +98,22 @@ public class Utilitaire {
         }
     }
 
-    public static void callMethod(RouteMapping route) throws Exception{
+    public static Object callMethod(RouteMapping route) throws Exception{
         try {
             Object instance = route.getClasse().getDeclaredConstructor().newInstance();
 
             Object valeur = route.getMethode().invoke(instance);
 
-            System.out.println(valeur);
+            return valeur;
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
+    }
+
+    public static String createPathView(String prefix, String nomView, String suffix){
+        String cheminVue = prefix+nomView+suffix;
+
+        return cheminVue;
     }
 }
 
