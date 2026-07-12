@@ -22,6 +22,8 @@ public class FrameworkListener implements ServletContextListener{
         ServletContext context = sce.getServletContext();
 
         String namePackage = context.getInitParameter("package_controller");
+        String prefix = context.getInitParameter("prefix");
+        String suffix = context.getInitParameter("suffix");
     
         try {
             List<Class> listeClasse = Utilitaire.getNameClasse(namePackage, Controller.class, ElementType.TYPE);
@@ -29,6 +31,8 @@ public class FrameworkListener implements ServletContextListener{
             Utilitaire.getListURL(listeClasse,listeUrl);
 
             sce.getServletContext().setAttribute("listeUrl", listeUrl);
+            sce.getServletContext().setAttribute("prefix", prefix);
+            sce.getServletContext().setAttribute("suffix", suffix);
         } catch (Exception e) {
             sce.getServletContext().setAttribute("exception", e);
         }
