@@ -7,9 +7,13 @@ import java.util.Map;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import main.JavaFrame.java.modele.*;
 import java.net.URL;
+import jakarta.servlet.*;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class Utilitaire {
     public static List<Class> getNameClasse(String namePackage,Class<? extends Annotation> annotation, ElementType typeAnnotation) throws Exception{
@@ -98,10 +102,8 @@ public class Utilitaire {
         }
     }
 
-    public static Object callMethod(RouteMapping route) throws Exception{
+    public static Object callMethod(RouteMapping route, Object instance) throws Exception{
         try {
-            Object instance = route.getClasse().getDeclaredConstructor().newInstance();
-
             Object valeur = route.getMethode().invoke(instance);
 
             return valeur;
@@ -114,6 +116,24 @@ public class Utilitaire {
         String cheminVue = prefix+nomView+suffix;
 
         return cheminVue;
+    }
+
+    public static void injectContext(Object target, ServletContext servletContext) throws Exception{
+        ApplicationContext context = WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
+
+        Field[] fields = target.getClass().getDeclaredFields();
+        
+        for (Field field : fields) {
+            if (ApplicationContext.class.isAssignableFrom(field.getType())) {
+                try {
+                    field.setAccessible(true);
+                    field.set(target, context);
+                    break;
+                } catch (Exception e) {
+                    throw new Exception(e.getMessage());
+                }
+            }
+        }
     }
 }
 
