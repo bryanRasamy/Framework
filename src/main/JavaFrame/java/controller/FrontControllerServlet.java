@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
+
 import main.JavaFrame.java.service.*;
 import main.JavaFrame.java.modele.*;
 import main.JavaFrame.web.annotations.controller.*;
@@ -14,24 +16,17 @@ import main.JavaFrame.java.listener.*;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
-
 public class FrontControllerServlet extends HttpServlet {
     private Map<UrlMethod,RouteMapping> listeUrl;
     private Exception exception;
     private String prefix;
     private String suffix;
-    private ServletContext servletContext;
 
     public void init() throws ServletException {
         this.listeUrl = (Map<UrlMethod, RouteMapping>) this.getServletContext().getAttribute("listeUrl");
         this.exception = (Exception) this.getServletContext().getAttribute("exception");
         this.prefix = (String) this.getServletContext().getAttribute("prefix");
         this.suffix = (String) this.getServletContext().getAttribute("suffix");
-
-        this.servletContext = this.getServletContext();
-
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -43,6 +38,9 @@ public class FrontControllerServlet extends HttpServlet {
     }
 
     protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        System.out.println("DispatcherType: " + req.getDispatcherType());
+        System.out.println("PathInfo: " + req.getPathInfo());
+
         if (req.getDispatcherType() == DispatcherType.FORWARD) {
             return;
         }
@@ -76,11 +74,7 @@ public class FrontControllerServlet extends HttpServlet {
 
         if (classeMethode!=null) {
             try {
-                Object instance = classeMethode.getClasse().getDeclaredConstructor().newInstance();
-
-                Utilitaire.injectContext(instance, servletContext);
-                
-                Object valeur=Utilitaire.callMethod(classeMethode, instance);
+                Object valeur=Utilitaire.callMethod(classeMethode);
 
                 if(valeur instanceof ModelAndView){
                     ModelAndView modelView = (ModelAndView) valeur;
@@ -102,6 +96,20 @@ public class FrontControllerServlet extends HttpServlet {
                     dispat.forward(req,res);
 
                     return;
+                }else if(Utilitaire.isAPI(classeMethode.getMethode(),WebAPI.class)){
+                    res.setContentType("application/json");
+                    res.setCharacterEncoding("UTF-8");
+
+                    String json = new String();
+
+                    if(valeur instanceof String){
+                        json=(String) valeur;
+                    }else{
+                        Gson gson = new Gson();
+                        json = gson.toJson(valeur);
+                    }
+
+                    out.println(json);
                 }else{
                     out.println("probleme");
                 }
