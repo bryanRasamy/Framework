@@ -8,7 +8,7 @@ CLASSES_DIR="$BUILD_DIR/classes"
 
 # Emplacement de l'API Servlet pour la compilation (Portée "provided")
 LIB_DIR="/home/bryan/Documents/ITU/Tomcat/lib"
-SERVLET_API_JAR="$LIB_DIR/servlet-api.jar:$LIB_DIR/jsp-api.jar"
+SERVLET_API_JAR="$LIB_DIR/servlet-api.jar:$LIB_DIR/jsp-api.jar:./lib/gson-2.10.1.jar"
 
 # Nettoyage et création du répertoire de build
 rm -rf $BUILD_DIR
