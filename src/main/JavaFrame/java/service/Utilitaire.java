@@ -8,8 +8,13 @@ import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+
 import main.JavaFrame.java.modele.*;
 import java.net.URL;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 
 public class Utilitaire {
     public static List<Class> getNameClasse(String namePackage,Class<? extends Annotation> annotation, ElementType typeAnnotation) throws Exception{
@@ -98,11 +103,21 @@ public class Utilitaire {
         }
     }
 
-    public static Object callMethod(RouteMapping route) throws Exception{
+    public static Object callMethod(RouteMapping route, HttpServletRequest request) throws Exception{
         try {
+            Method methode=route.getMethode();
+
             Object instance = route.getClasse().getDeclaredConstructor().newInstance();
 
-            Object valeur = route.getMethode().invoke(instance);
+            Parameter[] parametres= methode.getParameters();
+            Object[] arguments=new Object[parametres.length];
+
+            for (int i = 0; i < parametres.length; i++) {
+                String donnee=request.getParameter(parametres[i].getName());
+                arguments[i]=convertir(donnee,parametres[i].getType());
+            }
+
+            Object valeur = methode.invoke(instance,arguments);
 
             return valeur;
         } catch (Exception e) {
@@ -118,6 +133,22 @@ public class Utilitaire {
 
     public static boolean isAPI(Method methode, Class< ? extends Annotation> annotation){
         return methode.isAnnotationPresent(annotation);
+    }
+
+    public static Object convertir(String valeur, Class<?> type) {
+        if (valeur == null){
+            return null;
+        }else if (type == int.class || type == Integer.class){
+            return Integer.parseInt(valeur);
+        }else if (type == double.class || type == Double.class){
+            return Double.parseDouble(valeur);
+        }else if (type == boolean.class || type == Boolean.class){ 
+            return Boolean.parseBoolean(valeur);
+        }else if (type == long.class || type == Long.class){
+            return Long.parseLong(valeur);
+        }
+        
+        return valeur;
     }
 }
 
