@@ -39,7 +39,6 @@ public class FrontControllerServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         System.out.println("DispatcherType: " + req.getDispatcherType());
-        System.out.println("PathInfo: " + req.getPathInfo());
 
         if (req.getDispatcherType() == DispatcherType.FORWARD) {
             return;
@@ -48,6 +47,8 @@ public class FrontControllerServlet extends HttpServlet {
         String url = req.getRequestURL().toString();
 
         String actionPath = req.getServletPath();
+        String methodeHttp = req.getMethod();
+        System.out.println(methodeHttp);
 
         if (actionPath == null || actionPath.isEmpty()) {
             actionPath = req.getPathInfo();
@@ -68,13 +69,13 @@ public class FrontControllerServlet extends HttpServlet {
 
         UrlMethod urlMethod = new UrlMethod();
         urlMethod.setUrl(actionPath);
-        urlMethod.setMethod("get");
+        urlMethod.setMethod(methodeHttp.toLowerCase());
 
         RouteMapping classeMethode = listeUrl.get(urlMethod);
 
         if (classeMethode!=null) {
             try {
-                Object valeur=Utilitaire.callMethod(classeMethode);
+                Object valeur=Utilitaire.callMethod(classeMethode,req);
 
                 if(valeur instanceof ModelAndView){
                     ModelAndView modelView = (ModelAndView) valeur;
