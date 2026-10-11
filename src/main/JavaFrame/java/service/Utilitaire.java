@@ -7,10 +7,13 @@ import java.util.Map;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
 import main.JavaFrame.java.modele.*;
+import main.JavaFrame.web.annotations.controller.ModelAttribute;
+
 import java.net.URL;
 
 import jakarta.servlet.*;
@@ -113,8 +116,19 @@ public class Utilitaire {
             Object[] arguments=new Object[parametres.length];
 
             for (int i = 0; i < parametres.length; i++) {
-                String donnee=request.getParameter(parametres[i].getName());
-                arguments[i]=convertir(donnee,parametres[i].getType());
+                Parameter parametre=parametres[i];
+                if(annotationPresent(parametre, ModelAttribute.class)){
+                    Class<?> type = parametre.getType();
+
+                    Object argument = type.getDeclaredConstructor().newInstance();
+
+                    fillArgument(argument,parametre,request);
+                    
+                    arguments[i]=argument;
+                }else{
+                    String donnee=request.getParameter(parametres[i].getName());
+                    arguments[i]=convertir(donnee,parametres[i].getType());
+                }
             }
 
             Object valeur = methode.invoke(instance,arguments);
@@ -149,6 +163,29 @@ public class Utilitaire {
         }
         
         return valeur;
+    }
+
+    public static boolean annotationPresent(Parameter parametre, Class< ? extends Annotation> annotation){
+        return  parametre.isAnnotationPresent(annotation);
+    }
+
+    public static void fillArgument(Object argument, Parameter parametre, HttpServletRequest request) throws Exception{
+        Field[] attribut = argument.getClass().getDeclaredFields();
+
+        for (Field field : attribut) {
+            String nomAttribut=field.getName();
+
+            String nomParametre=parametre.getName()+"."+field.getName();
+            String donnee=request.getParameter(nomParametre);
+
+            if (donnee==null) continue;
+
+            String nomSetter="set"+Character.toUpperCase(nomAttribut.charAt(0))+nomAttribut.substring(1);
+            System.out.println(nomSetter);
+            
+            Method setter=argument.getClass().getMethod(nomSetter, field.getType());
+            setter.invoke(argument, convertir(donnee, field.getType()));
+        }
     }
 }
 
