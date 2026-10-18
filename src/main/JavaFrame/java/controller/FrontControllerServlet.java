@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 
+import jakarta.servlet.annotation.MultipartConfig;
 import main.JavaFrame.java.service.*;
 import main.JavaFrame.java.modele.*;
 import main.JavaFrame.web.annotations.controller.*;
@@ -16,6 +17,7 @@ import main.JavaFrame.java.listener.*;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
+@MultipartConfig
 public class FrontControllerServlet extends HttpServlet {
     private Map<UrlMethod,RouteMapping> listeUrl;
     private Exception exception;
@@ -39,6 +41,7 @@ public class FrontControllerServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         System.out.println("DispatcherType: " + req.getDispatcherType());
+        System.out.println("Content-type"+req.getContentType());
 
         if (req.getDispatcherType() == DispatcherType.FORWARD) {
             return;

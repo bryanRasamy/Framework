@@ -95,7 +95,7 @@ public class Utilitaire {
 
                             listeUrl.put(urlMethod, route);
                         } catch (NoSuchMethodException e) {
-                            
+                            /**/
                         }
                         
                     }
@@ -122,7 +122,7 @@ public class Utilitaire {
 
                     Object argument = type.getDeclaredConstructor().newInstance();
 
-                    fillArgument(argument,parametre,request);
+                    fillArgument(argument,parametre,type,request);
                     
                     arguments[i]=argument;
                 }else{
@@ -169,22 +169,57 @@ public class Utilitaire {
         return  parametre.isAnnotationPresent(annotation);
     }
 
-    public static void fillArgument(Object argument, Parameter parametre, HttpServletRequest request) throws Exception{
+    public static void fillArgument(Object argument, Parameter parametre, Class<?> type,HttpServletRequest request) throws Exception{
         Field[] attribut = argument.getClass().getDeclaredFields();
+
+        boolean estMapFile = false;
+        Map<String,Object> mapFichier=new HashMap<>();
+
+        if (type == MapFile.class) {
+            estMapFile=true;
+
+            Part part = request.getPart(parametre.getName());
+
+            if (part == null || part.getSize() == 0) {
+                throw new Exception("Aucun fichier reçu pour : " + parametre.getName());
+            }
+
+            String nomFichier = part.getSubmittedFileName();
+            System.out.println(nomFichier);
+
+            int indexPoint = nomFichier.lastIndexOf(".");
+
+            String nom=nomFichier.substring(0,indexPoint);
+            String extension=nomFichier.substring(indexPoint+1);
+            byte[] contenu=part.getInputStream().readAllBytes();
+
+            mapFichier.put("nom",nom);
+            mapFichier.put("extension",extension);
+            mapFichier.put("binaire",contenu);
+        }
 
         for (Field field : attribut) {
             String nomAttribut=field.getName();
 
+            String nomSetter="set"+Character.toUpperCase(nomAttribut.charAt(0))+nomAttribut.substring(1);
+            System.out.println(nomSetter);
+
+            Method setter=argument.getClass().getMethod(nomSetter, field.getType());
+
+            if (estMapFile){
+                setter.invoke(argument, mapFichier.get(nomAttribut));
+                continue;
+            }
+
             String nomParametre=parametre.getName()+"."+field.getName();
+
             String donnee=request.getParameter(nomParametre);
 
             if (donnee==null) continue;
 
-            String nomSetter="set"+Character.toUpperCase(nomAttribut.charAt(0))+nomAttribut.substring(1);
-            System.out.println(nomSetter);
-            
-            Method setter=argument.getClass().getMethod(nomSetter, field.getType());
+
             setter.invoke(argument, convertir(donnee, field.getType()));
+
         }
     }
 }
