@@ -1,9 +1,7 @@
 package main.JavaFrame.java.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -117,24 +115,66 @@ public class Utilitaire {
 
             for (int i = 0; i < parametres.length; i++) {
                 Parameter parametre=parametres[i];
-                if(annotationPresent(parametre, ModelAttribute.class)){
-                    Class<?> type = parametre.getType();
+                Class<?> type = parametre.getType();
 
+                if(annotationPresent(parametre, ModelAttribute.class)){
                     Object argument = type.getDeclaredConstructor().newInstance();
 
                     fillArgument(argument,parametre,type,request);
                     
                     arguments[i]=argument;
-                }else{
+                } else if (type == MySession.class) {
+                    Object objectSession = type.getDeclaredConstructor().newInstance();
+
+                    MySession mySession = (MySession) objectSession;
+
+                    HttpSession session = request.getSession();
+
+                    Enumeration<String> nomAttributsSession = session.getAttributeNames();
+
+                    while (nomAttributsSession.hasMoreElements()){
+                        String nomAttribut = nomAttributsSession.nextElement();
+
+                        mySession.addAttribute(nomAttribut,session.getAttribute(nomAttribut));
+                    }
+                    arguments[i]=mySession;
+                } else{
                     String donnee=request.getParameter(parametres[i].getName());
                     arguments[i]=convertir(donnee,parametres[i].getType());
                 }
             }
 
-            Object valeur = methode.invoke(instance,arguments);
+            try {
+                Object valeur = methode.invoke(instance, arguments);
 
-            return valeur;
-        } catch (Exception e) {
+                for (Object arg : arguments) {
+                    if (arg instanceof MySession mySession) {
+                        HttpSession session = request.getSession();
+                        Map<String, Object> map = mySession.getAttributs();
+
+                        Enumeration<String> nomAttributsSession = session.getAttributeNames();
+
+                        while (nomAttributsSession.hasMoreElements()){
+                            String nomAttribut = nomAttributsSession.nextElement();
+
+                            if (map.containsKey(nomAttribut)) continue;
+
+                            session.removeAttribute(nomAttribut);
+                        }
+
+                        for (Map.Entry<String, Object> e : map.entrySet()) {
+                            session.setAttribute(e.getKey(), e.getValue());
+                        }
+                    }
+                }
+
+                return valeur;
+            } catch (InvocationTargetException e) {
+                e.getCause().printStackTrace();
+                throw e;
+            }
+
+    } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
     }

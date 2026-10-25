@@ -97,6 +97,7 @@ public class FrontControllerServlet extends HttpServlet {
 
                     RequestDispatcher dispat = req.getRequestDispatcher(cheminVue);
                     System.out.println(dispat);
+
                     dispat.forward(req,res);
 
                     return;
