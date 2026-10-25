@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
 import main.JavaFrame.java.modele.*;
+import main.JavaFrame.web.annotations.controller.Auth;
 import main.JavaFrame.web.annotations.controller.ModelAttribute;
 
 import java.net.URL;
@@ -108,6 +109,18 @@ public class Utilitaire {
         try {
             Method methode=route.getMethode();
 
+            if(Utilitaire.isPresent(methode, Auth.class)){
+                String nomAuth = (String) request.getServletContext().getAttribute("framework.auth");
+
+                if (nomAuth==null) throw new Exception("L'UserConnexion n'a pas ete defini correctement");
+
+                HttpSession session = request.getSession(false);
+
+                Object idUser = session.getAttribute(nomAuth);
+
+                if (idUser==null) throw new Exception("Vous devez vous connecter pour utiliser cette methode");
+            }
+
             Object instance = route.getClasse().getDeclaredConstructor().newInstance();
 
             Parameter[] parametres= methode.getParameters();
@@ -185,9 +198,10 @@ public class Utilitaire {
         return cheminVue;
     }
 
-    public static boolean isAPI(Method methode, Class< ? extends Annotation> annotation){
+    public static boolean isPresent(Method methode, Class< ? extends Annotation> annotation){
         return methode.isAnnotationPresent(annotation);
     }
+
 
     public static Object convertir(String valeur, Class<?> type) {
         if (valeur == null){
