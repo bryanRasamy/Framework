@@ -29,6 +29,9 @@ public class FrontControllerServlet extends HttpServlet {
         this.exception = (Exception) this.getServletContext().getAttribute("exception");
         this.prefix = (String) this.getServletContext().getAttribute("prefix");
         this.suffix = (String) this.getServletContext().getAttribute("suffix");
+        String nomAuth = (String) getInitParameter("UserConnexion");
+
+        this.getServletContext().setAttribute("framework.auth",nomAuth);
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -101,7 +104,7 @@ public class FrontControllerServlet extends HttpServlet {
                     dispat.forward(req,res);
 
                     return;
-                }else if(Utilitaire.isAPI(classeMethode.getMethode(),WebAPI.class)){
+                }else if(Utilitaire.isPresent(classeMethode.getMethode(),WebAPI.class)){
                     res.setContentType("application/json");
                     res.setCharacterEncoding("UTF-8");
 
