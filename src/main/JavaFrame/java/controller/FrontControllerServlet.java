@@ -29,9 +29,6 @@ public class FrontControllerServlet extends HttpServlet {
         this.exception = (Exception) this.getServletContext().getAttribute("exception");
         this.prefix = (String) this.getServletContext().getAttribute("prefix");
         this.suffix = (String) this.getServletContext().getAttribute("suffix");
-        String nomAuth = (String) getInitParameter("UserConnexion");
-
-        this.getServletContext().setAttribute("framework.auth",nomAuth);
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -118,6 +115,15 @@ public class FrontControllerServlet extends HttpServlet {
                     }
 
                     out.println(json);
+                }else if (valeur instanceof String redirection && redirection.startsWith("redirect:")) {
+                    String chemin = redirection.substring("redirect:".length()).trim();
+
+                    if (chemin.startsWith("/")){
+                        chemin=req.getContextPath()+chemin;
+                    }
+
+                    res.sendRedirect(chemin);
+                    return;
                 }else{
                     out.println("probleme");
                 }

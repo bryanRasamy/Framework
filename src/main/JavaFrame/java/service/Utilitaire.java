@@ -15,7 +15,6 @@ import main.JavaFrame.web.annotations.controller.ModelAttribute;
 
 import java.net.URL;
 
-import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 public class Utilitaire {
@@ -24,7 +23,7 @@ public class Utilitaire {
 
         if (typeAnnotation==ElementType.TYPE) {
             liste=getClasse(namePackage, annotation);
-        }else {
+        } else {
             throw new Exception("Le type de l'annotation est introuvable");
         }
 
@@ -110,6 +109,8 @@ public class Utilitaire {
             Method methode=route.getMethode();
 
             if(Utilitaire.isPresent(methode, Auth.class)){
+                Auth auth = methode.getAnnotation(Auth.class);
+
                 String nomAuth = (String) request.getServletContext().getAttribute("framework.auth");
 
                 if (nomAuth==null) throw new Exception("L'UserConnexion n'a pas ete defini correctement");
@@ -119,6 +120,28 @@ public class Utilitaire {
                 Object idUser = session.getAttribute(nomAuth);
 
                 if (idUser==null) throw new Exception("Vous devez vous connecter pour utiliser cette methode");
+
+
+                String[] roles = (String[]) auth.roles();
+
+                if(roles!=null && roles.length>0){
+                    String roleAuth = (String) request.getServletContext().getAttribute("framework.role");
+
+                    if (roleAuth==null) throw new Exception("L'UserRole n'a pas ete defini correctement");
+
+                    boolean estVerifier = false;
+
+                    for (String role:roles){
+                        String roleSesssion = (String) session.getAttribute(roleAuth);
+
+                        if (!roleSesssion.equalsIgnoreCase(role)) continue;
+
+                        estVerifier = true;
+                        break;
+                    }
+
+                    if(!estVerifier) throw new Exception("Vous n'avez pas acces a cette methode. Verifier si le role que vous avez donné est correcte");
+                }
             }
 
             Object instance = route.getClasse().getDeclaredConstructor().newInstance();
