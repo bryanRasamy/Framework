@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 public class RouteMapping {
     private Class classe;
     private Method methode;
+    private Object instance;
 
     /*Constructeur*/
     public RouteMapping(){}
@@ -18,6 +19,10 @@ public class RouteMapping {
         this.methode=method;
     }
 
+    public void setInstance(Object instance){
+        this.instance=instance;
+    }
+
     /*Getters*/
     public Class getClasse(){
         return this.classe;
@@ -25,5 +30,9 @@ public class RouteMapping {
 
     public Method getMethode(){
         return this.methode;
+    }
+
+    public Object getInstance() {
+        return this.instance;
     }
 }
