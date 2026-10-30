@@ -69,6 +69,8 @@ public class Utilitaire {
     public static  void getListURL(List<Class> classes, Map<UrlMethod,RouteMapping> listeUrl) throws Exception{
         try {
             for (Class classe : classes) {
+                Object instance=classe.getDeclaredConstructor().newInstance();
+
                 Method[] listeMethods = classe.getMethods();
 
                 for (Method methode : listeMethods) {
@@ -90,6 +92,7 @@ public class Utilitaire {
                             RouteMapping route = new RouteMapping();
                             route.setClasse(classe);
                             route.setMethode(methode);
+                            route.setInstance(instance);
 
                             listeUrl.put(urlMethod, route);
                         } catch (NoSuchMethodException e) {
@@ -116,6 +119,8 @@ public class Utilitaire {
                 if (nomAuth==null) throw new Exception("L'UserConnexion n'a pas ete defini correctement");
 
                 HttpSession session = request.getSession(false);
+
+                if (session == null) throw new Exception("Vous devez vous connecter pour utiliser cette methode");
 
                 Object idUser = session.getAttribute(nomAuth);
 
@@ -144,7 +149,7 @@ public class Utilitaire {
                 }
             }
 
-            Object instance = route.getClasse().getDeclaredConstructor().newInstance();
+            Object instance = route.getInstance();
 
             Parameter[] parametres= methode.getParameters();
             Object[] arguments=new Object[parametres.length];
